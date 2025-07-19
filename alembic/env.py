@@ -11,7 +11,7 @@ from alembic import context
 
 from app.db.database import Base
 from app.models.project import Project
-
+from app.models.skill import Skill
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
