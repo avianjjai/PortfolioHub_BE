@@ -15,6 +15,7 @@ from app.models.skill import Skill
 from app.models.experience import Experience
 from app.models.education import Education
 from app.models.certification import Certification
+from app.models.about import About
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
