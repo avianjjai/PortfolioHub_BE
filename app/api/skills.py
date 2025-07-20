@@ -6,13 +6,14 @@ from app.schemas.skill import SkillCreate, SkillUpdate
 from app.utils.auth import require_role, get_current_user
 from datetime import datetime, timezone
 from app.models.user import User
+from bson import ObjectId
 
 router = APIRouter()
 
 # get skills by user id
 @router.get('/skills/user/{user_id}', response_model=List[Skill])
 async def read_skills_by_user(user_id: str):
-    return await Skill.find(Skill.user.id == user_id).to_list()
+    return await Skill.find(Skill.user_id == ObjectId(user_id)).to_list()
 
 # get perticular skill by id
 @router.get('/skills/{skill_id}', response_model=Skill)
@@ -26,14 +27,13 @@ async def get_skill_by_id(skill_id: str):
 @router.post('/skills', dependencies=[Depends(require_role("admin"))], response_model=Skill)
 async def create_skill(skill: SkillCreate, current_user: User = Depends(get_current_user)):
     # check if skill already exists
-    existing_skill = await Skill.find_one(Skill.name == skill.name, Skill.user.id == current_user.id)
+    existing_skill = await Skill.find_one(Skill.name == skill.name, Skill.user_id == ObjectId(current_user.id))
     if existing_skill:
         raise HTTPException(status_code=400, detail='Skill already exists')
 
-    new_skill = {**skill.model_dump(), 'user': current_user}
-
-    await Skill(**new_skill).insert()
-    return new_skill
+    new_skill = {**skill.model_dump(), 'user_id': current_user.id}
+    skill_created = await Skill(**new_skill).insert()
+    return skill_created
 
 
 # update skill
@@ -42,7 +42,7 @@ async def update_skill(skill_id: str, skill: SkillUpdate, current_user: User = D
     updated_skill = await Skill.get(skill_id)
     if updated_skill is None:
         raise HTTPException(status_code=404, detail='Skill not found')
-    if updated_skill.user.id != current_user.id:
+    if updated_skill.user_id != ObjectId(current_user.id):
         raise HTTPException(status_code=403, detail='You are not allowed to update this skill')
     for key, value in skill.model_dump().items():
         setattr(updated_skill, key, value)
@@ -50,13 +50,13 @@ async def update_skill(skill_id: str, skill: SkillUpdate, current_user: User = D
     await updated_skill.save()
     return updated_skill
 
-# delete skill
+# delete skill (admin only) user deleted successfully without token, but it should not be possible to delete skill without token
 @router.delete('/skills/{skill_id}', dependencies=[Depends(require_role("admin"))], response_model=dict)
 async def delete_skill(skill_id: str, current_user: User = Depends(get_current_user)):
     target_skill = await Skill.get(skill_id)
     if target_skill is None:
         raise HTTPException(status_code=404, detail='Skill not found')
-    if target_skill.user.id != current_user.id:
+    if target_skill.user_id != ObjectId(current_user.id):
         raise HTTPException(status_code=403, detail='You are not allowed to delete this skill')
     await target_skill.delete()
     return {'message': 'Skill deleted successfully'}

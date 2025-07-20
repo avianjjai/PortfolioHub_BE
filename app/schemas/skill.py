@@ -2,6 +2,7 @@ from unicodedata import category
 from pydantic import BaseModel, Field
 from typing import Optional
 from datetime import datetime
+from beanie import PydanticObjectId
 
 class SkillBase(BaseModel):
     name: str
@@ -17,7 +18,7 @@ class SkillUpdate(SkillBase):
     proficiency: Optional[int] = Field(ge=0, le=100)
 
 class Skill(SkillBase):
-    id: int
+    id: PydanticObjectId
     created_at: datetime
     updated_at: datetime
 

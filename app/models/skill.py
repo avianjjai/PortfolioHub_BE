@@ -1,9 +1,8 @@
-from beanie import Document
+from beanie import Document, PydanticObjectId
 from datetime import datetime, timezone
-from app.models.user import User
 
 class Skill(Document):
-    user: User
+    user_id: PydanticObjectId
     name: str
     category: str
     proficiency: int
