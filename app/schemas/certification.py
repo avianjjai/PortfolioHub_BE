@@ -1,19 +1,21 @@
 from pydantic import BaseModel
-from datetime import date
+from datetime import date, datetime
+from beanie import PydanticObjectId
+from typing import Optional
 
 class CertificationBase(BaseModel):
     name: str
-    issuing_organization: str
+    issuer: str
     issue_date: date
-    expiration_date: date
-    credential_id: str
-    credential_url: str
+    description: str
+    credential_id: Optional[str] = None
+    credential_url: Optional[str] = None
 
 class CertificationCreate(CertificationBase):
     pass
 
 class Certification(CertificationBase):
-    id: int
-
-    class Config:
-        from_attributes = True
+    id: PydanticObjectId
+    user_id: PydanticObjectId
+    created_at: datetime
+    updated_at: datetime
