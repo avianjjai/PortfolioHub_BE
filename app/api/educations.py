@@ -5,6 +5,7 @@ from app.models.education import Education as EducationModel
 from app.schemas.education import Education as EducationSchema
 from app.schemas.education import EducationCreate as EducationCreateSchema
 from typing import List
+from app.utils.auth import require_role
 
 router = APIRouter()
 
@@ -13,7 +14,7 @@ def read_educations(db: Session = Depends(get_db)):
     educations = db.query(EducationModel).all()
     return educations
 
-@router.post('/educations', response_model=EducationSchema)
+@router.post('/educations', dependencies=[Depends(require_role("admin"))], response_model=EducationSchema)
 def create_education(education: EducationCreateSchema, db: Session = Depends(get_db)):
     db_education = EducationModel(**education.model_dump())
     db.add(db_education)
@@ -28,7 +29,7 @@ def get_education(education_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail='Education not found')
     return db_education
 
-@router.put('/educations/{education_id}', response_model=EducationSchema)
+@router.put('/educations/{education_id}', dependencies=[Depends(require_role("admin"))], response_model=EducationSchema)
 def update_education(education_id: int, education: EducationCreateSchema, db: Session = Depends(get_db)):
     db_education = db.query(EducationModel).filter(EducationModel.id == education_id).first()
     if db_education is None:
@@ -39,7 +40,7 @@ def update_education(education_id: int, education: EducationCreateSchema, db: Se
     db.refresh(db_education)
     return db_education
 
-@router.delete('/educations/{education_id}', response_model=dict)
+@router.delete('/educations/{education_id}', dependencies=[Depends(require_role("admin"))], response_model=dict)
 def delete_education(education_id: int, db: Session = Depends(get_db)):
     db_education = db.query(EducationModel).filter(EducationModel.id == education_id).first()
     if db_education is None:

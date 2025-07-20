@@ -4,6 +4,7 @@ from app.db.database import get_db
 from app.models.about import About as AboutModel
 from app.schemas.about import About as AboutSchema
 from app.schemas.about import AboutCreate as AboutCreateSchema
+from app.utils.auth import require_role
 
 router = APIRouter()
 
@@ -14,7 +15,7 @@ def read_about(db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail='About not found')
     return about
 
-@router.post('/about', response_model=AboutSchema)
+@router.post('/about', dependencies=[Depends(require_role("admin"))], response_model=AboutSchema)
 def create_about(about: AboutCreateSchema, db: Session = Depends(get_db)):
     db_about = AboutModel(**about.model_dump())
     db.add(db_about)
@@ -29,7 +30,7 @@ def get_about(about_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail='About not found')
     return db_about
 
-@router.put('/about/{about_id}', response_model=AboutSchema)
+@router.put('/about/{about_id}', dependencies=[Depends(require_role("admin"))], response_model=AboutSchema)
 def update_about(about_id: int, about: AboutCreateSchema, db: Session = Depends(get_db)):
     db_about = db.query(AboutModel).filter(AboutModel.id == about_id).first()
     if not db_about:
@@ -40,7 +41,7 @@ def update_about(about_id: int, about: AboutCreateSchema, db: Session = Depends(
     db.refresh(db_about)
     return db_about
 
-@router.delete('/about/{about_id}', response_model=dict)
+@router.delete('/about/{about_id}', dependencies=[Depends(require_role("admin"))], response_model=dict)
 def delete_about(about_id: int, db: Session = Depends(get_db)):
     db_about = db.query(AboutModel).filter(AboutModel.id == about_id).first()
     if not db_about:

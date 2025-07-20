@@ -6,6 +6,7 @@ from fastapi import Depends, HTTPException
 from app.db.database import get_db
 from app.models.skill import Skill as SkillModel
 from app.schemas.skill import SkillCreate as SkillCreateSchema
+from app.utils.auth import require_role
 
 router = APIRouter()
 
@@ -14,7 +15,7 @@ def read_skills(db: Session = Depends(get_db)):
     skills = db.query(SkillModel).all()
     return skills
 
-@router.post('/skills', response_model=SkillSchema)
+@router.post('/skills', dependencies=[Depends(require_role("admin"))], response_model=SkillSchema)
 def create_skill(skill: SkillCreateSchema, db: Session = Depends(get_db)):
     db_skill = SkillModel(**skill.model_dump())
     db.add(db_skill)
@@ -29,7 +30,7 @@ def get_skill(skill_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail='Skill not found')
     return db_skill
 
-@router.put('/skills/{skill_id}', response_model=SkillSchema)
+@router.put('/skills/{skill_id}', dependencies=[Depends(require_role("admin"))], response_model=SkillSchema)
 def update_skill(skill_id: int, skill: SkillCreateSchema, db: Session = Depends(get_db)):
     db_skill = db.query(SkillModel).filter(SkillModel.id == skill_id).first()
     if db_skill is None:
@@ -40,7 +41,7 @@ def update_skill(skill_id: int, skill: SkillCreateSchema, db: Session = Depends(
     db.refresh(db_skill)
     return db_skill
 
-@router.delete('/skills/{skill_id}', response_model=dict)
+@router.delete('/skills/{skill_id}', dependencies=[Depends(require_role("admin"))], response_model=dict)
 def delete_skill(skill_id: int, db: Session = Depends(get_db)):
     db_skill = db.query(SkillModel).filter(SkillModel.id == skill_id).first()
     if db_skill is None:

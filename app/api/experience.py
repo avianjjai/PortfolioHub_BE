@@ -5,7 +5,7 @@ from app.db.database import get_db
 from app.models.experience import Experience as ExperienceModel
 from app.schemas.experience import Experience as ExperienceSchema
 from app.schemas.experience import ExperienceCreate as ExperienceCreateSchema
-
+from app.utils.auth import require_role
 
 router = APIRouter()
 
@@ -14,7 +14,7 @@ def read_experiences(db: Session = Depends(get_db)):
     experiences = db.query(ExperienceModel).all()
     return experiences
 
-@router.post('/experiences', response_model=ExperienceSchema)
+@router.post('/experiences', dependencies=[Depends(require_role("admin"))], response_model=ExperienceSchema)
 def create_experience(experience: ExperienceCreateSchema, db: Session = Depends(get_db)):
     db_experience = ExperienceModel(**experience.model_dump())
     db.add(db_experience)
@@ -29,7 +29,7 @@ def get_experience(experience_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail='Experience not found')
     return db_experience
 
-@router.put('/experiences/{experience_id}', response_model=ExperienceSchema)
+@router.put('/experiences/{experience_id}', dependencies=[Depends(require_role("admin"))], response_model=ExperienceSchema)
 def update_experience(experience_id: int, experience: ExperienceCreateSchema, db: Session = Depends(get_db)):
     db_experience = db.query(ExperienceModel).filter(ExperienceModel.id == experience_id).first()
     if db_experience is None:
@@ -40,7 +40,7 @@ def update_experience(experience_id: int, experience: ExperienceCreateSchema, db
     db.refresh(db_experience)
     return db_experience
 
-@router.delete('/experiences/{experience_id}', response_model=dict)
+@router.delete('/experiences/{experience_id}', dependencies=[Depends(require_role("admin"))], response_model=dict)
 def delete_experience(experience_id: int, db: Session = Depends(get_db)):
     db_experience = db.query(ExperienceModel).filter(ExperienceModel.id == experience_id).first()
     if db_experience is None:

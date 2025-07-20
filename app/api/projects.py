@@ -6,6 +6,7 @@ from typing import List
 from sqlalchemy.orm import Session
 from fastapi import Depends, HTTPException
 from app.db.database import get_db
+from app.utils.auth import require_role
 
 router = APIRouter()
 
@@ -17,7 +18,7 @@ def read_projects(db: Session = Depends(get_db)):
     return db.query(ProjectModel).all()
 
 # Defines the route for creating a new project
-@router.post('/projects', response_model=ProjectSchema)
+@router.post('/projects', dependencies=[Depends(require_role("admin"))], response_model=ProjectSchema)
 def create_project(project: ProjectCreateSchema, db: Session = Depends(get_db)):
     db_project = ProjectModel(**project.model_dump())
     db.add(db_project)
@@ -25,7 +26,7 @@ def create_project(project: ProjectCreateSchema, db: Session = Depends(get_db)):
     db.refresh(db_project)
     return db_project
 
-@router.put('/projects/{project_id}', response_model=ProjectSchema)
+@router.put('/projects/{project_id}', dependencies=[Depends(require_role("admin"))], response_model=ProjectSchema)
 def update_project(project_id: int, project: ProjectCreateSchema, db: Session = Depends(get_db)):
     db_project = db.query(ProjectModel).filter(ProjectModel.id == project_id).first()
     if db_project is None:
@@ -38,7 +39,7 @@ def update_project(project_id: int, project: ProjectCreateSchema, db: Session = 
     db.refresh(db_project)
     return db_project
 
-@router.delete('/projects/{project_id}', response_model=dict)
+@router.delete('/projects/{project_id}', dependencies=[Depends(require_role("admin"))], response_model=dict)
 def delete_project(project_id: int, db: Session = Depends(get_db)):
     db_project = db.query(ProjectModel).filter(ProjectModel.id == project_id).first()
     if db_project is None:
