@@ -1,50 +1,56 @@
-from typing import List
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session
-from app.db.database import get_db
-from app.models.experience import Experience as ExperienceModel
-from app.schemas.experience import Experience as ExperienceSchema
-from app.schemas.experience import ExperienceCreate as ExperienceCreateSchema
+from typing import List
+from app.models.experience import Experience
+from app.schemas.experience import ExperienceCreate, ExperienceUpdate
 from app.utils.auth import require_role
+from app.utils.auth import get_current_user
+from app.models.user import User
+from datetime import datetime, timezone
 
 router = APIRouter()
 
-@router.get('/experiences', response_model=List[ExperienceSchema])
-def read_experiences(db: Session = Depends(get_db)):
-    experiences = db.query(ExperienceModel).all()
-    return experiences
+# get experiences by user id
+@router.get('/experiences/user/{user_id}', response_model=List[Experience])
+async def read_experiences_by_user(user_id: str):
+    return await Experience.find(Experience.user.id == user_id).to_list()
 
-@router.post('/experiences', dependencies=[Depends(require_role("admin"))], response_model=ExperienceSchema)
-def create_experience(experience: ExperienceCreateSchema, db: Session = Depends(get_db)):
-    db_experience = ExperienceModel(**experience.model_dump())
-    db.add(db_experience)
-    db.commit()
-    db.refresh(db_experience)
-    return db_experience
-
-@router.get('/experiences/{experience_id}', response_model=ExperienceSchema)
-def get_experience(experience_id: int, db: Session = Depends(get_db)):
-    db_experience = db.query(ExperienceModel).filter(ExperienceModel.id == experience_id).first()
-    if db_experience is None:
+# get perticular experience by id
+@router.get('/experiences/{experience_id}', response_model=Experience)
+async def get_experience_by_id(experience_id: str):
+    experience = await Experience.get(experience_id)
+    if experience is None:
         raise HTTPException(status_code=404, detail='Experience not found')
-    return db_experience
+    return experience
 
-@router.put('/experiences/{experience_id}', dependencies=[Depends(require_role("admin"))], response_model=ExperienceSchema)
-def update_experience(experience_id: int, experience: ExperienceCreateSchema, db: Session = Depends(get_db)):
-    db_experience = db.query(ExperienceModel).filter(ExperienceModel.id == experience_id).first()
-    if db_experience is None:
+# create experience
+@router.post('/experiences', dependencies=[Depends(require_role("admin"))], response_model=Experience)
+async def create_experience(experience: ExperienceCreate, current_user: User = Depends(get_current_user)):
+    new_experience = {**experience.model_dump(), 'user': current_user}
+    await Experience(**new_experience).insert()
+    return new_experience
+
+# update experience
+@router.put('/experiences/{experience_id}', dependencies=[Depends(require_role("admin"))], response_model=Experience)
+async def update_experience(experience_id: str, experience: ExperienceUpdate, current_user: User = Depends(get_current_user)):
+    updated_experience = await Experience.get(experience_id)
+    if updated_experience is None:
         raise HTTPException(status_code=404, detail='Experience not found')
-    for key, value in experience.model_dump().items():
-        setattr(db_experience, key, value)
-    db.commit()
-    db.refresh(db_experience)
-    return db_experience
+    if updated_experience.user.id != current_user.id:
+        raise HTTPException(status_code=403, detail='You are not allowed to update this experience')
+    update_data = experience.model_dump(exclude_unset=True)
+    for key, value in update_data.items():
+        setattr(updated_experience, key, value)
+    updated_experience.updated_at = datetime.now(timezone.utc) # type: ignore
+    await updated_experience.save()
+    return updated_experience
 
+# delete experience
 @router.delete('/experiences/{experience_id}', dependencies=[Depends(require_role("admin"))], response_model=dict)
-def delete_experience(experience_id: int, db: Session = Depends(get_db)):
-    db_experience = db.query(ExperienceModel).filter(ExperienceModel.id == experience_id).first()
-    if db_experience is None:
+async def delete_experience(experience_id: str, current_user: User = Depends(get_current_user)):
+    target_experience = await Experience.get(experience_id)
+    if target_experience is None:
         raise HTTPException(status_code=404, detail='Experience not found')
-    db.delete(db_experience)
-    db.commit()
+    if target_experience.user.id != current_user.id:
+        raise HTTPException(status_code=403, detail='You are not allowed to delete this experience')
+    await target_experience.delete()
     return {'message': 'Experience deleted successfully'}

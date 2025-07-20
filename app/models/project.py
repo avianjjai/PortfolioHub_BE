@@ -1,15 +1,22 @@
-from app.db.database import Base
-from sqlalchemy import Column, DateTime, Integer, String, JSON
+from beanie import Document, PydanticObjectId
 from datetime import datetime, timezone
+from typing import List, Optional
 
-class Project(Base):
-    __tablename__ = "projects"
-    id = Column(Integer, primary_key=True, index=True)
-    title = Column(String, index=True)
-    description = Column(String)
-    technologies = Column(JSON)
-    live_url = Column(String)
-    code_url = Column(String)
-    image_url = Column(String)
-    created_at = Column(DateTime(timezone=True), default=datetime.now(timezone.utc))
-    updated_at = Column(DateTime(timezone=True), default=datetime.now(timezone.utc))
+class Project(Document):
+    user_id: PydanticObjectId
+    title: str
+    description: str
+    technologies: List[str]
+    live_url: Optional[str] = None
+    code_url: Optional[str] = None
+    image_url: Optional[str] = None
+    start_date: datetime
+    end_date: Optional[datetime] = None
+    created_at: datetime = datetime.now(timezone.utc)
+    updated_at: datetime = datetime.now(timezone.utc)
+
+    class Settings:
+        name = "projects"
+        indexes = [
+            "title",
+        ]

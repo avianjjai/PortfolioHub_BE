@@ -1,13 +1,19 @@
-from sqlalchemy import Column, Integer, String, Boolean
-from app.db.database import Base
+from beanie import Document, PydanticObjectId
 from app.enums.user import UserRole, UserStatus
+from datetime import datetime, timezone
 
-class User(Base):
-    __tablename__ = "users"
+class User(Document):
+    username: str
+    email: str
+    hashed_password: str
+    is_active: UserStatus = UserStatus.active
+    role: UserRole = UserRole.admin
+    created_at: datetime = datetime.now(timezone.utc)
+    updated_at: datetime = datetime.now(timezone.utc)
 
-    id = Column(Integer, primary_key=True, index=True)
-    username = Column(String, unique=True, index=True)
-    email = Column(String, unique=True, index=True)
-    hashed_password = Column(String)
-    is_active = Column(String, default=UserStatus.active)
-    role = Column(String, default=UserRole.admin)
+    class Settings:
+        name = "users"
+        indexes = [
+            "username",
+            "email",
+        ]

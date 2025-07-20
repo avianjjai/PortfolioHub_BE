@@ -1,14 +1,19 @@
-from sqlalchemy import Column, Integer, String
-from app.db.database import Base
+from beanie import Document
+from app.models.user import User
 
-class About(Base):
-    __tablename__ = 'about'
-    id = Column(Integer, primary_key=True, index=True)
-    title = Column(String)
-    first_name = Column(String, index=True)
-    middle_name = Column(String)
-    last_name = Column(String)
-    email = Column(String)
-    phone = Column(String)
-    address = Column(String)
-    profile_image_url = Column(String)
+class About(Document):
+    user: User
+    title: str
+    first_name: str
+    middle_name: str
+    last_name: str
+    email: str
+    phone: str
+    address: str
+    profile_image_url: str
+
+    class Settings:
+        name = "about"
+        indexes = [
+            "title",
+        ]

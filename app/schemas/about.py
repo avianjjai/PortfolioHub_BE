@@ -1,4 +1,6 @@
 from pydantic import BaseModel
+from beanie import PydanticObjectId
+from datetime import datetime
 
 class AboutBase(BaseModel):
     title: str
@@ -14,7 +16,8 @@ class AboutCreate(AboutBase):
     pass
 
 class About(AboutBase):
-    id: int
-
+    id: PydanticObjectId
+    created_at: datetime
+    updated_at: datetime
     class Config:
         from_attributes = True

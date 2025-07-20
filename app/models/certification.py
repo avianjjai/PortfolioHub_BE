@@ -1,12 +1,18 @@
-from sqlalchemy import Column, Integer, String, Date
-from app.db.database import Base
+from beanie import Document
+from datetime import datetime
+from app.models.user import User
 
-class Certification(Base):
-    __tablename__ = 'certifications'
-    id = Column(Integer, primary_key=True, index=True)
-    name = Column(String, index=True)
-    issuing_organization = Column(String)
-    issue_date = Column(Date)
-    expiration_date = Column(Date)
-    credential_id = Column(String)
-    credential_url = Column(String)
+class Certification(Document):
+    user: User
+    name: str
+    issuing_organization: str
+    issue_date: datetime
+    expiration_date: datetime
+    credential_id: str
+    credential_url: str
+
+    class Settings:
+        name = "certifications"
+        indexes = [
+            "name",
+        ]

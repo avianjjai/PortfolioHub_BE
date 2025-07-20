@@ -32,14 +32,15 @@ def verify_token(token: str) -> dict | None:
     except JWTError:
         return None
 
-def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)) -> User:
+# Update this function to use Beanie instead of SQLAlchemy
+async def get_current_user(token: str = Depends(oauth2_scheme)) -> User:
     """Extract the username from a valid JWT token, or raise HTTPException if invalid."""
     payload = verify_token(token)
     if payload is None:
         raise HTTPException(status_code=401, detail="Invalid credentials")
     
     username = payload.get("username")
-    user = db.query(User).filter(User.username == username).first()
+    user = await User.find_one(User.username == username)
     if user is None:
         raise HTTPException(status_code=401, detail="Invalid credentials")
 

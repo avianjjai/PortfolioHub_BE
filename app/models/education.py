@@ -1,11 +1,18 @@
-from sqlalchemy import Column, Integer, String, Date
-from app.db.database import Base
+from beanie import Document
+from datetime import datetime
+from typing import Optional
+from app.models.user import User
 
-class Education(Base):
-    __tablename__ = 'educations'
-    id = Column(Integer, primary_key=True, index=True)
-    institution = Column(String, index=True)
-    degree = Column(String)
-    start_date = Column(Date)
-    end_date = Column(Date)
-    description = Column(String)
+class Education(Document):
+    user: User
+    institution: str
+    degree: str
+    start_date: datetime
+    end_date:    datetime
+    description: str
+
+    class Settings:
+        name = "educations"
+        indexes = [
+            "institution",
+        ]
