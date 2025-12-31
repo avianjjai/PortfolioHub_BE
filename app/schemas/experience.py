@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 from typing import Optional, List
-from datetime import datetime
+from datetime import date, datetime
 from beanie import PydanticObjectId
 
 class ExperienceBase(BaseModel):
@@ -8,8 +8,8 @@ class ExperienceBase(BaseModel):
     company: str
     description: str
     technologies: List[str]
-    start_date: datetime
-    end_date: Optional[datetime] = None
+    start_date: date
+    end_date: Optional[date] = None
 
 class ExperienceCreate(ExperienceBase):
     pass
@@ -19,8 +19,8 @@ class ExperienceUpdate(BaseModel):
     company: Optional[str] = None
     description: Optional[str] = None
     technologies: Optional[List[str]] = None
-    start_date: Optional[datetime] = None
-    end_date: Optional[datetime] = None
+    start_date: Optional[date] = None
+    end_date: Optional[date] = None
 
 class Experience(ExperienceBase):
     id: PydanticObjectId

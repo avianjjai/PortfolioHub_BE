@@ -7,21 +7,17 @@ from app.utils.auth import get_current_user
 from app.models.user import User
 from datetime import datetime, timezone
 from bson import ObjectId
+from app.schemas.error import Error
+from beanie import PydanticObjectId
 
 router = APIRouter()
 
 # get experiences by user id
 @router.get('/experiences/user/{user_id}', response_model=List[Experience])
-async def read_experiences_by_user(user_id: str):
-    return await Experience.find(Experience.user_id == ObjectId(user_id)).to_list()
-
-# get perticular experience by id
-@router.get('/experiences/{experience_id}', response_model=Experience)
-async def get_experience_by_id(experience_id: str):
-    experience = await Experience.get(experience_id)
-    if experience is None:
-        raise HTTPException(status_code=404, detail='Experience not found')
-    return experience
+async def read_experiences_by_user(user_id: PydanticObjectId):
+    experiences = await Experience.find(Experience.user_id == user_id).to_list()
+    experiences.sort(key=lambda x: x.end_date if x.end_date else x.start_date, reverse=True)
+    return experiences
 
 # create experience
 @router.post('/experiences', dependencies=[Depends(require_role("admin"))], response_model=Experience)
@@ -35,9 +31,21 @@ async def create_experience(experience: ExperienceCreate, current_user: User = D
 async def update_experience(experience_id: str, experience: ExperienceUpdate, current_user: User = Depends(get_current_user)):
     updated_experience = await Experience.get(experience_id)
     if updated_experience is None:
-        raise HTTPException(status_code=404, detail='Experience not found')
+        raise HTTPException(
+            status_code=404, 
+            detail=Error(
+                message='Experience not found', 
+                status_code=404
+            ).model_dump()
+        )
     if updated_experience.user_id != ObjectId(current_user.id):
-        raise HTTPException(status_code=403, detail='You are not allowed to update this experience')
+        raise HTTPException(
+            status_code=403, 
+            detail=Error(
+                message='You are not allowed to update this experience', 
+                status_code=403
+            ).model_dump()
+        )
     update_data = experience.model_dump(exclude_unset=True)
     for key, value in update_data.items():
         setattr(updated_experience, key, value)
@@ -50,8 +58,20 @@ async def update_experience(experience_id: str, experience: ExperienceUpdate, cu
 async def delete_experience(experience_id: str, current_user: User = Depends(get_current_user)):
     target_experience = await Experience.get(experience_id)
     if target_experience is None:
-        raise HTTPException(status_code=404, detail='Experience not found')
+        raise HTTPException(
+            status_code=404, 
+            detail=Error(
+                message='Experience not found', 
+                status_code=404
+            ).model_dump()
+        )
     if target_experience.user_id != ObjectId(current_user.id):
-        raise HTTPException(status_code=403, detail='You are not allowed to delete this experience')
+        raise HTTPException(
+            status_code=403, 
+            detail=Error(
+                message='You are not allowed to delete this experience', 
+                status_code=403
+            ).model_dump()
+        )
     await target_experience.delete()
     return {'message': 'Experience deleted successfully'}

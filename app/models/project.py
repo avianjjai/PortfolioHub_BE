@@ -1,5 +1,5 @@
 from beanie import Document, PydanticObjectId
-from datetime import datetime, timezone
+from datetime import datetime, timezone, date
 from typing import List, Optional
 
 class Project(Document):
@@ -10,8 +10,8 @@ class Project(Document):
     live_url: Optional[str] = None
     code_url: Optional[str] = None
     image_url: Optional[str] = None
-    start_date: datetime
-    end_date: Optional[datetime] = None
+    start_date: date
+    end_date: Optional[date] = None
     created_at: datetime = datetime.now(timezone.utc)
     updated_at: datetime = datetime.now(timezone.utc)
 

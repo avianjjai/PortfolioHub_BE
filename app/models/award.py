@@ -1,17 +1,18 @@
 from beanie import Document, PydanticObjectId
-from typing import Optional
 from datetime import datetime, timezone
 
-class About(Document):
+class Award(Document):
     user_id: PydanticObjectId
     name: str
-    title: str
+    issuer: str
+    issue_date: datetime
     description: str
-    education: str
-    certifications: str
-    awards: str
+    category: str
     created_at: datetime = datetime.now(timezone.utc)
     updated_at: datetime = datetime.now(timezone.utc)
 
     class Settings:
-        name = "about"
+        name = "awards"
+        indexes = [
+            "name",
+        ]

@@ -1,0 +1,5 @@
+\section{CERTIFICATIONS} {
+    \resumeSubHeadingListStart
+        <CERTIFICATION_BODY>
+    \resumeSubHeadingListEnd
+}

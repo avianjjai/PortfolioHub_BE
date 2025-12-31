@@ -1,5 +1,15 @@
 .python-version
 .env
+.env.*
+venv/
+.venv/
 __pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.db
+*.sqlite
+test.db
 .DS_Store
 .vscode/

@@ -1,20 +1,19 @@
 from pydantic import BaseModel
+from datetime import date, datetime
 from beanie import PydanticObjectId
-from datetime import datetime
 from typing import Optional
 
-class AboutBase(BaseModel):
+class AwardBase(BaseModel):
     name: str
-    title: str
+    issuer: str
+    issue_date: date
     description: str
-    education: str
-    certifications: str
-    awards: str
+    category: str
 
-class AboutCreate(AboutBase):
+class AwardCreate(AwardBase):
     pass
 
-class About(AboutBase):
+class Award(AwardBase):
     id: PydanticObjectId
     user_id: PydanticObjectId
     created_at: datetime
