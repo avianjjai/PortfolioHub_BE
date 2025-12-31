@@ -57,7 +57,7 @@ async def get_current_user_portfolio(current_user: User = Depends(get_current_us
     }
 
 # update portfolio
-@router.put('/', dependencies=[Depends(require_role("admin"))])
+@router.put('/')
 async def update_portfolio(portfolio: PortfolioUpdate, current_user: User = Depends(get_current_user)):
     # Update only the portfolio fields
     update_data = portfolio.model_dump(exclude_unset=True)
