@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, HTTPException, Query
 from fastapi.responses import Response
 from app.models.user import User
 from app.models.experience import Experience
@@ -7,27 +7,32 @@ from app.models.project import Project
 from app.models.skill import Skill
 from app.models.certification import Certification
 from app.models.award import Award
-from app.utils.auth import get_current_user
 from datetime import datetime
 import tempfile
 from pathlib import Path
 from app.utils.latex_compiler import compile_latex_to_pdf
 from app.ResumeGenerator.templates.resume import Resume
+from beanie import PydanticObjectId
 
 router = APIRouter()
 
 @router.get('/latex')
-async def get_resume_latex(current_user: User = Depends(get_current_user)):
+async def get_resume_latex(user_id: PydanticObjectId = Query(..., description="User ID for the resume to generate")):
     """
-    Generate and download resume PDF using LaTeX template for the current authenticated user.
-    This provides professional formatting matching the LaTeX template structure.
+    Generate and download resume PDF using LaTeX template for the specified user.
+    This endpoint is public and does not require authentication.
+    Anyone can download any user's resume by providing their user_id.
     """
     try:
+        # Get user by ID
+        user = await User.get(user_id)
+        if user is None:
+            raise HTTPException(status_code=404, detail="User not found")
+        
         # Get user data
-        user_data = current_user.model_dump(exclude={"hashed_password"})
+        user_data = user.model_dump(exclude={"hashed_password"})
         
         # Get all related data
-        user_id = current_user.id
         
         experiences = await Experience.find(Experience.user_id == user_id).to_list()
         experiences.sort(key=lambda x: x.end_date if x.end_date else x.start_date, reverse=True)
