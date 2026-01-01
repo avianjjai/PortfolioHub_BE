@@ -1,23 +1,30 @@
 from pathlib import Path
 
 def escape_latex(text: str) -> str:
-    """Escape special LaTeX characters"""
+    """Escape special LaTeX characters
+    
+    Order matters: escape #, $, &, % first (before backslash replacement)
+    to avoid conflicts with LaTeX commands.
+    """
     if not text:
         return ""
-    replacements = {
-        '&': r'\&',
-        '%': r'\%',
-        '$': r'\$',
-        '#': r'\#',
-        '^': r'\textasciicircum{}',
-        '_': r'\_',
-        '{': r'\{',
-        '}': r'\}',
-        '~': r'\textasciitilde{}',
-        '\\': r'\textbackslash{}',
-    }
-    for char, replacement in replacements.items():
-        text = text.replace(char, replacement)
+    # First pass: escape characters that need escaping before backslash
+    # These are critical for LaTeX compilation
+    text = text.replace('#', r'\#')
+    text = text.replace('$', r'\$')
+    text = text.replace('&', r'\&')
+    text = text.replace('%', r'\%')
+    text = text.replace('^', r'\textasciicircum{}')
+    text = text.replace('_', r'\_')
+    
+    # Second pass: escape braces (these can appear after backslash replacement)
+    text = text.replace('{', r'\{')
+    text = text.replace('}', r'\}')
+    
+    # Third pass: escape backslash and tilde (after other special chars)
+    text = text.replace('\\', r'\textbackslash{}')
+    text = text.replace('~', r'\textasciitilde{}')
+    
     return text
 
 def format_date_for_latex(date) -> str:

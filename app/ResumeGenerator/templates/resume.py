@@ -21,7 +21,7 @@ class Resume:
         link_config = {
             'phone': {'prefix': 'tel:', 'icon': 'Phone', 'display': display},
             'email': {'prefix': 'mailto:', 'icon': 'Envelope', 'display': display},
-            'linkedin_url': {'prefix': '', 'icon': 'LinkedinSquare', 'display': display},
+            'linkedin_url': {'prefix': '', 'icon': 'Linkedin', 'display': display},
             'github_url': {'prefix': '', 'icon': 'Github', 'display': display},
             'hackerrank_url': {'prefix': '', 'icon': 'Hackerrank', 'display': display},
             'leetcode_url': {'prefix': '', 'icon': 'Code', 'display': lambda x: 'LeetCode: ' + display(x)}
@@ -154,9 +154,11 @@ class Resume:
             project_body += "            {}{}\n"
             project_body += self.getVerticalSpacing(config['SPACE_BETWEEN_SUB_SECTION_ITEM_TITLE_AND_CONTENT'])
             project_body += "        \\resumeItemListStart\n"
-            tech_str = ", ".join([escape_latex(t) for t in project.get('technologies', [])])
-            if tech_str:
-                project['description'] += "\nTechnologies: " + escape_latex(tech_str)
+            tech_list = project.get('technologies', [])
+            if tech_list:
+                tech_str = ", ".join([escape_latex(str(t)) for t in tech_list])
+                # Add technologies line without double-escaping
+                project_body += "            \\resumeItem{Technologies: " + tech_str + "}\n"
             for i, subdesc in enumerate(project.get('description', '').split('\n')):
                 if i > 0:
                     project_body += self.getVerticalSpacing(config['SPACE_BETWEEN_SUB_SECTION_BULLET_POINTS'])
