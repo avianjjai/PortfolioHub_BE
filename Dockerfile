@@ -19,10 +19,18 @@ WORKDIR /app
 COPY requirements.txt .
 
 # Install Python dependencies
-RUN pip install --no-cache-dir -r requirements.txt
+# Using --root-user-action=ignore to suppress warning (this is fine in Docker)
+RUN pip install --no-cache-dir --root-user-action=ignore -r requirements.txt
 
 # Copy application code
 COPY . .
+
+# Create a non-root user for running the application
+RUN useradd -m -u 1000 appuser && \
+    chown -R appuser:appuser /app
+
+# Switch to non-root user before running (security best practice)
+USER appuser
 
 # Expose port (Render will set PORT env var)
 EXPOSE 8000
