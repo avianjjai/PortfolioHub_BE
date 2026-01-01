@@ -79,6 +79,8 @@ class Resume:
 
     def generate_skills_section(self, config: Dict, skills: List[Dict]) -> str:
         skills_by_category = self.group_skills_by_category(skills)
+        if skills_by_category == {}:
+            return ""
 
         skill_body = ""
         for category, skill_names in skills_by_category.items():
@@ -91,6 +93,9 @@ class Resume:
             .replace("<SKILL_BODY>", skill_body)
 
     def generate_experience_section(self, config: Dict, experiences: List[Dict]) -> str:
+        if len(experiences) == 0:
+            return ""
+        
         content = "\\section{EXPERIENCE} {\n"
         content += "    \\resumeSubHeadingListStart\n"
 
@@ -114,6 +119,9 @@ class Resume:
             .replace("<EXPERIENCE_BODY>", experience_body)
 
     def generate_education_section(self, config: Dict, educations: List[Dict]) -> str:
+        if len(educations) == 0:
+            return ""
+        
         education_body = ""
         for i, education in enumerate(sorted(educations, key=lambda x: x.get('start_date', ''), reverse=True)):
             if i > 0:
@@ -134,6 +142,9 @@ class Resume:
             .replace("<EDUCATION_BODY>", education_body)
 
     def generate_project_section(self, config: Dict, projects: List[Dict]) -> str:
+        if len(projects) == 0:
+            return ""
+        
         project_body = ""
         for i, project in enumerate(sorted(projects, key=lambda x: x.get('start_date', ''), reverse=True)):
             if i > 0:
@@ -158,6 +169,9 @@ class Resume:
             .replace("<PROJECT_BODY>", project_body)
 
     def generate_achievement_section(self, config: Dict, awards: List[Dict]) -> str:
+        if len(awards) == 0:
+            return ""
+        
         achievement_body = ""
         for i, award in enumerate(awards):
             if i > 0:
@@ -178,6 +192,9 @@ class Resume:
             .replace("<ACHIEVEMENT_BODY>", achievement_body)
 
     def generate_certification_section(self, config: Dict, certifications: List[Dict]) -> str:
+        if len(certifications) == 0:
+            return ""
+        
         certification_body = ""
         for i, certification in enumerate(certifications):
             if i > 0:
@@ -211,10 +228,14 @@ class Resume:
                     {'title': 'CERTIFICATIONS', 'content': self.generate_certification_section(config,certifications)}]
 
         resume_body = ""
-        for i, section in enumerate[dict[str, str]](sections):
+        i = 0
+        for section in sections:
             if i > 0:
                 resume_body += self.getVerticalSpacing(config['SPACE_BETWEEN_SECTIONS'])
+            if section['content'] == "":
+                continue
             resume_body += section['content'] + "\n"
+            i += 1
 
         content = read_template_file("v1/resume.txt")\
             .replace("<TEMPLATE_CONTENT>", template_content)\

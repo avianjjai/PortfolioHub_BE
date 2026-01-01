@@ -3,7 +3,7 @@ from fastapi import APIRouter
 from fastapi import Depends, HTTPException
 from app.models.skill import Skill
 from app.schemas.skill import SkillCreate, SkillUpdate
-from app.utils.auth import require_role, get_current_user
+from app.utils.auth import get_current_user
 from datetime import datetime, timezone
 from app.models.user import User
 from bson import ObjectId
@@ -18,7 +18,7 @@ async def read_skills_by_user(user_id: PydanticObjectId):
     return await Skill.find(Skill.user_id == user_id).to_list()
 
 # create skill
-@router.post('/skills', dependencies=[Depends(require_role("admin"))], response_model=Skill)
+@router.post('/skills', response_model=Skill)
 async def create_skill(skill: SkillCreate, current_user: User = Depends(get_current_user)):
     # check if skill already exists
     existing_skill = await Skill.find_one(Skill.name == skill.name, Skill.user_id == ObjectId(current_user.id))
@@ -37,7 +37,7 @@ async def create_skill(skill: SkillCreate, current_user: User = Depends(get_curr
 
 
 # update skill
-@router.put('/skills/{skill_id}', dependencies=[Depends(require_role("admin"))], response_model=Skill)
+@router.put('/skills/{skill_id}', response_model=Skill)
 async def update_skill(skill_id: str, skill: SkillUpdate, current_user: User = Depends(get_current_user)):
     updated_skill = await Skill.get(skill_id)
     if updated_skill is None:
@@ -62,8 +62,8 @@ async def update_skill(skill_id: str, skill: SkillUpdate, current_user: User = D
     await updated_skill.save()
     return updated_skill
 
-# delete skill (admin only) user deleted successfully without token, but it should not be possible to delete skill without token
-@router.delete('/skills/{skill_id}', dependencies=[Depends(require_role("admin"))], response_model=dict)
+# delete skill
+@router.delete('/skills/{skill_id}', response_model=dict)
 async def delete_skill(skill_id: str, current_user: User = Depends(get_current_user)):
     target_skill = await Skill.get(skill_id)
     if target_skill is None:

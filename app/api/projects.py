@@ -3,7 +3,6 @@ from app.models.project import Project
 from app.schemas.project import ProjectCreate, ProjectUpdate
 from typing import List
 from fastapi import Depends, HTTPException
-from app.utils.auth import require_role
 from datetime import datetime, timezone
 from app.utils.auth import get_current_user
 from app.models.user import User
@@ -21,14 +20,14 @@ async def read_projects_by_user(user_id: PydanticObjectId):
     return projects
 
 # create project
-@router.post('/projects', dependencies=[Depends(require_role("admin"))], response_model=Project)
+@router.post('/projects', response_model=Project)
 async def create_project(project: ProjectCreate, current_user: User = Depends(get_current_user)):
     print(project)
     new_project = {**project.model_dump(), 'user_id': current_user.id}
     return await Project(**new_project).insert()
 
 # update project
-@router.put('/projects/{project_id}', dependencies=[Depends(require_role("admin"))], response_model=Project)
+@router.put('/projects/{project_id}', response_model=Project)
 async def update_project(project_id: str, project: ProjectUpdate, current_user: User = Depends(get_current_user)):
     updated_project = await Project.get(project_id)
 
@@ -54,7 +53,7 @@ async def update_project(project_id: str, project: ProjectUpdate, current_user: 
     return updated_project
 
 # delete project
-@router.delete('/projects/{project_id}', dependencies=[Depends(require_role("admin"))], response_model=dict)
+@router.delete('/projects/{project_id}', response_model=dict)
 async def delete_project(project_id: str, current_user: User = Depends(get_current_user)):
     target_project = await Project.get(project_id)
     if target_project is None:

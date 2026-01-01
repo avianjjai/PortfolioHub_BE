@@ -1,7 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from app.models.user import User
 from app.schemas.user import PortfolioUpdate
-from app.utils.auth import require_role
 from datetime import datetime
 from app.utils.auth import get_current_user
 from beanie import PydanticObjectId

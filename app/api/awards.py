@@ -2,7 +2,6 @@ from fastapi import APIRouter, Depends, HTTPException
 from app.models.award import Award
 from app.schemas.award import AwardCreate
 from typing import List
-from app.utils.auth import require_role
 from datetime import datetime, timezone
 from app.utils.auth import get_current_user
 from app.models.user import User
@@ -18,14 +17,14 @@ async def read_awards_by_user(user_id: PydanticObjectId):
     return await Award.find(Award.user_id == user_id).to_list()
 
 # create award
-@router.post('/awards', dependencies=[Depends(require_role("admin"))], response_model=Award)
+@router.post('/awards', response_model=Award)
 async def create_award(award: AwardCreate, current_user: User = Depends(get_current_user)):
     new_award = {**award.model_dump(), 'user_id': current_user.id}
     award_created = await Award(**new_award).insert()
     return award_created
 
 # update award
-@router.put('/awards/{award_id}', dependencies=[Depends(require_role("admin"))], response_model=Award)
+@router.put('/awards/{award_id}', response_model=Award)
 async def update_award(award_id: str, award: AwardCreate, current_user: User = Depends(get_current_user)):
     updated_award = await Award.get(award_id)
     if updated_award is None:
@@ -50,7 +49,7 @@ async def update_award(award_id: str, award: AwardCreate, current_user: User = D
     return updated_award
     
 # delete award
-@router.delete('/awards/{award_id}', dependencies=[Depends(require_role("admin"))], response_model=dict)
+@router.delete('/awards/{award_id}', response_model=dict)
 async def delete_award(award_id: str, current_user: User = Depends(get_current_user)):
     target_award = await Award.get(award_id)
     if target_award is None:

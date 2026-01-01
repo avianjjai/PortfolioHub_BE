@@ -2,7 +2,6 @@ from fastapi import APIRouter, Depends, HTTPException
 from typing import List
 from app.models.experience import Experience
 from app.schemas.experience import ExperienceCreate, ExperienceUpdate
-from app.utils.auth import require_role
 from app.utils.auth import get_current_user
 from app.models.user import User
 from datetime import datetime, timezone
@@ -20,14 +19,14 @@ async def read_experiences_by_user(user_id: PydanticObjectId):
     return experiences
 
 # create experience
-@router.post('/experiences', dependencies=[Depends(require_role("admin"))], response_model=Experience)
+@router.post('/experiences', response_model=Experience)
 async def create_experience(experience: ExperienceCreate, current_user: User = Depends(get_current_user)):
     new_experience = {**experience.model_dump(), 'user_id': current_user.id}
     experience_created = await Experience(**new_experience).insert()
     return experience_created
 
 # update experience
-@router.put('/experiences/{experience_id}', dependencies=[Depends(require_role("admin"))], response_model=Experience)
+@router.put('/experiences/{experience_id}', response_model=Experience)
 async def update_experience(experience_id: str, experience: ExperienceUpdate, current_user: User = Depends(get_current_user)):
     updated_experience = await Experience.get(experience_id)
     if updated_experience is None:
@@ -54,7 +53,7 @@ async def update_experience(experience_id: str, experience: ExperienceUpdate, cu
     return updated_experience
 
 # delete experience
-@router.delete('/experiences/{experience_id}', dependencies=[Depends(require_role("admin"))], response_model=dict)
+@router.delete('/experiences/{experience_id}', response_model=dict)
 async def delete_experience(experience_id: str, current_user: User = Depends(get_current_user)):
     target_experience = await Experience.get(experience_id)
     if target_experience is None:

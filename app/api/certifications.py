@@ -2,7 +2,6 @@ from fastapi import APIRouter, Depends, HTTPException
 from app.models.certification import Certification
 from app.schemas.certification import CertificationCreate
 from typing import List
-from app.utils.auth import require_role
 from datetime import datetime, timezone
 from app.utils.auth import get_current_user
 from app.models.user import User
@@ -17,14 +16,14 @@ async def read_certifications_by_user(user_id: PydanticObjectId):
     return await Certification.find(Certification.user_id == user_id).to_list()
 
 # create certification
-@router.post('/certifications', dependencies=[Depends(require_role("admin"))], response_model=Certification)
+@router.post('/certifications', response_model=Certification)
 async def create_certification(certification: CertificationCreate, current_user: User = Depends(get_current_user)):
     new_certification = {**certification.model_dump(), 'user_id': current_user.id}
     certification_created = await Certification(**new_certification).insert()
     return certification_created
 
 # update certification
-@router.put('/certifications/{certification_id}', dependencies=[Depends(require_role("admin"))], response_model=Certification)
+@router.put('/certifications/{certification_id}', response_model=Certification)
 async def update_certification(certification_id: str, certification: CertificationCreate, current_user: User = Depends(get_current_user)):
     updated_certification = await Certification.get(certification_id)
     if updated_certification is None:
@@ -48,7 +47,7 @@ async def update_certification(certification_id: str, certification: Certificati
     return updated_certification
     
 # delete certification
-@router.delete('/certifications/{certification_id}', dependencies=[Depends(require_role("admin"))], response_model=dict)
+@router.delete('/certifications/{certification_id}', response_model=dict)
 async def delete_certification(certification_id: str, current_user: User = Depends(get_current_user)):
     target_certification = await Certification.get(certification_id)
     if target_certification is None:

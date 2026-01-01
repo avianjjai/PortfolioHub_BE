@@ -7,7 +7,6 @@ from app.utils.auth import get_current_user
 from ..models.user import User
 from datetime import datetime, timezone
 from beanie import PydanticObjectId
-from app.utils.auth import require_role
 from app.schemas.error import Error
 from app.websocket import manager
 
@@ -105,7 +104,7 @@ async def notify_messages_read(message_ids: List[str], user_ids: List[str]):
     for user_id in user_ids:
         await manager.send_personal_message(user_id, payload)
 
-@router.post('/send', dependencies=[Depends(require_role("admin"))], response_model=MessageCreatedResponse)
+@router.post('/send', response_model=MessageCreatedResponse)
 async def message(message: MessageCreatedByAuthenticatedUser, current_user: User = Depends(get_current_user)):
     """Create a new authenticated user message"""
     recipient_user = await User.find_one(User.email == message.recipientEmail)
@@ -203,7 +202,7 @@ async def message(message: MessageCreatedByUnauthenticatedUser):
     await notify_new_message(message_created, str(recipient_user.id))
     return message_created
 
-@router.get('', dependencies=[Depends(require_role("admin"))], response_model=List[MessageResponse])
+@router.get('', response_model=List[MessageResponse])
 async def get_all_messages_list_for_user(current_user: User = Depends(get_current_user)):
     """Get all messages received by the current user"""
     messages = await Message.find({
@@ -250,7 +249,7 @@ async def get_message_count(current_user: User = Depends(get_current_user)):
         total=total_count
     )
 
-@router.put('/read', dependencies=[Depends(require_role("admin"))], response_model=dict)
+@router.put('/read', response_model=dict)
 async def mark_message_as_read(read_message_body: ReadMessageBody, current_user: User = Depends(get_current_user)):
     """Mark all messages in the list as read"""
     message_ids = [PydanticObjectId(message_id) for message_id in read_message_body.messageIds]
@@ -274,7 +273,7 @@ async def mark_message_as_read(read_message_body: ReadMessageBody, current_user:
 
     return {"message": "Messages marked as read successfully"}
 
-@router.delete("/{message_id}", dependencies=[Depends(require_role("admin"))], response_model=dict)
+@router.delete("/{message_id}", response_model=dict)
 async def delete_message(message_id: PydanticObjectId, current_user: User = Depends(get_current_user)):
     """Delete a message"""
     message = await Message.find_one({
@@ -314,7 +313,7 @@ async def delete_message(message_id: PydanticObjectId, current_user: User = Depe
         await message.save()
     return {"message": "Message deleted successfully"}
 
-@router.delete("/conversation/{conversation_id}", dependencies=[Depends(require_role("admin"))], response_model=dict)
+@router.delete("/conversation/{conversation_id}", response_model=dict)
 async def delete_conversation(conversation_id: PydanticObjectId, current_user: User = Depends(get_current_user)):
     """Delete all messages in a conversation"""
     # Find all messages in this conversation where the current user is a participant
