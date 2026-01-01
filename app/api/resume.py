@@ -11,7 +11,7 @@ from app.utils.auth import get_current_user
 from datetime import datetime
 import tempfile
 from pathlib import Path
-from app.utils.latex_resume_generator import compile_latex_to_pdf
+from app.utils.latex_compiler import compile_latex_to_pdf
 from app.ResumeGenerator.templates.resume import Resume
 
 router = APIRouter()
